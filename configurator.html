@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stadia WiFi Kit - Offline Config Generator</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #1a1e26;
+    --panel2: #222834;
+    --border: #313a4a;
+    --text: #e6e9ef;
+    --muted: #9aa4b5;
+    --accent: #ffcf47;
+    --accent2: #4aa8ff;
+    --ok: #46c98b;
+    --warn: #ff8a5c;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header {
+    padding: 28px 24px 20px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #171b23, var(--bg));
+  }
+  header h1 { margin: 0 0 6px; font-size: 26px; color: var(--accent); }
+  header p { margin: 0; color: var(--muted); max-width: 820px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px; }
+  .notice {
+    background: #1c2733; border: 1px solid #2f4a63; border-left: 4px solid var(--accent2);
+    padding: 12px 16px; border-radius: 6px; margin-bottom: 22px; color: #cfe3f7; font-size: 14px;
+  }
+  .notice b { color: var(--accent2); }
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  fieldset {
+    border: 1px solid var(--border); background: var(--panel);
+    border-radius: 8px; padding: 16px 18px 20px; margin: 0 0 18px;
+  }
+  legend { color: var(--accent); font-weight: 700; padding: 0 8px; font-size: 15px; }
+  label { display: block; margin: 12px 0 4px; color: var(--muted); font-size: 13px; }
+  input[type=text], input[type=password], select {
+    width: 100%; padding: 9px 11px; background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 5px; font: 14px var(--mono);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent2); }
+  .hint { font-size: 12px; color: #6f7d92; margin-top: 3px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  button {
+    background: var(--accent); color: #1a1a1a; border: 0; border-radius: 5px;
+    padding: 10px 16px; font-weight: 700; cursor: pointer; font-size: 14px;
+  }
+  button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  button:hover { filter: brightness(1.08); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+  .card h3 { margin: 0 0 4px; font-size: 16px; color: var(--accent2); }
+  .card .sub { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  pre {
+    background: #0b0e13; border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; overflow: auto; font: 12.5px/1.5 var(--mono); color: #d6e2f0;
+    max-height: 320px; white-space: pre;
+  }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tab {
+    padding: 6px 11px; font-size: 12.5px; border-radius: 5px; cursor: pointer;
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+  }
+  .tab.active { background: var(--accent2); color: #0b0e13; font-weight: 700; border-color: var(--accent2); }
+  .status { color: var(--ok); font-size: 13px; min-height: 20px; margin-top: 8px; }
+  .err { color: var(--warn); }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  code { font-family: var(--mono); color: var(--accent); }
+  .pill { display:inline-block; background:#243044; color:#9fc6f5; border-radius:10px; padding:1px 8px; font-size:11px; }
+  footer { border-top: 1px solid var(--border); padding: 18px 24px; color: var(--muted); font-size: 12px; text-align: center; }
+  a { color: var(--accent2); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Stadia WiFi Kit &mdash; Offline Config Generator</h1>
+  <p>Fill in your own network details below. This page generates ready-to-use startup scripts,
+     router config and commands with your values filled in &mdash; no manual placeholder editing.
+     Everything runs locally in your browser: nothing is uploaded, nothing is required online.</p>
+</header>
+
+<div class="wrap">
+  <div class="notice">
+    <b>Privacy:</b> this is a single HTML file with no network calls. Anything you type
+    (including your WiFi password) stays in this browser tab. Close the tab and it is gone.
+    Generated files are saved by your browser only when you click Download.
+  </div>
+
+  <div class="layout">
+    <!-- LEFT: INPUT FORM -->
+    <div>
+      <fieldset>
+        <legend>1 &middot; Your network</legend>
+        <div class="row">
+          <div>
+            <label for="pcIp">PC IP address (this machine)</label>
+            <input type="text" id="pcIp" value="192.168.1.100" placeholder="192.168.1.100">
+            <div class="hint">Set a static IP on the PC running the receiver.</div>
+          </div>
+          <div>
+            <label for="routerIp">Router IP (gateway / DNS upstream)</label>
+            <input type="text" id="routerIp" value="192.168.1.1" placeholder="192.168.1.1">
+          </div>
+        </div>
+        <label for="ssid">WiFi SSID (network name)</label>
+        <input type="text" id="ssid" value="" placeholder="MyHomeWiFi_5G">
+        <div class="hint">Must be WPA2-Personal / AES. WPA3 is NOT supported by the controller.</div>
+        <label for="wifiPass">WiFi password</label>
+        <input type="password" id="wifiPass" value="" placeholder="your-wifi-password">
+        <div class="hint" style="margin-top:10px;">You do <b>not</b> enter the controller's IP or MAC anywhere. They are detected for you after pairing &mdash; see step 2 below.</div>
+        <input type="hidden" id="controllerIp" value="">
+        <input type="hidden" id="controllerMac" value="">
+      </fieldset>
+
+      <fieldset>
+        <legend>2 &middot; Controller identity (auto-detected)</legend>
+        <div class="notice" style="margin-bottom:12px;">
+          <b>No typing needed.</b> Pair the controller first (step 4 in the checklist), then run the
+          generated <code>find-controller-mac.bat</code>. It detects the controller and writes a
+          <code>detected-values.txt</code>. Load that file below &mdash; or let your AI assistant paste the
+          values &mdash; and the controller IP + MAC fill in automatically.
+        </div>
+        <label for="detectedFile">Load detected-values.txt</label>
+        <input type="file" id="detectedFile" accept=".txt" style="padding:8px;">
+        <div class="hint">The file is created by <code>find-controller-mac.bat</code>. It stays on your machine; nothing is uploaded.</div>
+        <div id="detectedView" class="card" style="margin-top:12px; padding:12px; font-family:var(--mono); font-size:12.5px; color:var(--muted);">
+          Not detected yet &mdash; using default controller IP <code>192.168.1.155</code>. Generate now if you only need the pairing / detection scripts; re-generate after detection to finalize the router rule.
+        </div>
+        <details style="margin-top:10px;">
+          <summary>AI assistant / manual override (optional)</summary>
+          <div class="hint" style="margin:8px 0 4px;">If an AI assistant detected the values, it can enter them here directly.</div>
+          <label for="controllerMacManual">Controller WiFi MAC (detected)</label>
+          <input type="text" id="controllerMacManual" value="" placeholder="d4:f5:47:xx:xx:xx">
+          <label for="controllerIpManual">Controller IP (detected)</label>
+          <input type="text" id="controllerIpManual" value="" placeholder="192.168.1.155">
+          <button id="applyManualBtn" class="secondary" style="margin-top:10px;">Apply detected values</button>
+        </details>
+      </fieldset>
+
+      <fieldset>
+        <legend>3 &middot; Your paths</legend>
+        <label for="projectDir">Project folder (full Windows path)</label>
+        <input type="text" id="projectDir" value="C:\Users\You\Desktop\stadia-wifi-kit" placeholder="C:\Users\You\Desktop\stadia-wifi-kit">
+        <label for="pythonExe">Python executable (full path)</label>
+        <input type="text" id="pythonExe" value="python" placeholder="python  OR  C:\path\to\python.exe">
+        <div class="hint">"python" works if Python is on your PATH. Otherwise paste the full path.</div>
+        <label for="logMode">Receiver log folder</label>
+        <select id="logMode">
+          <option value="auto">Auto - project folder \logs\autostart (recommended)</option>
+          <option value="custom">Custom path below</option>
+        </select>
+        <input type="text" id="logDirCustom" value="" placeholder="C:\path\to\logs" style="display:none; margin-top:8px;">
+      </fieldset>
+
+      <fieldset>
+        <legend>4 &middot; Options</legend>
+        <label><input type="checkbox" id="optAudio" checked style="width:auto; margin-right:6px;"> Enable headset audio (needs ffmpeg with libopus)</label>
+        <label><input type="checkbox" id="optStatic" checked style="width:auto; margin-right:6px;"> Include DHCP static-IP line for the controller</label>
+        <label><input type="checkbox" id="optVoice" style="width:auto; margin-right:6px;"> Voice guidance text for AI agents (<code>PROMPT.md</code> additions)</label>
+      </fieldset>
+
+      <div class="btnrow">
+        <button id="genBtn">Generate everything</button>
+        <button id="downloadAllBtn" class="secondary">Download all files (.zip)</button>
+        <button id="copyBtn" class="secondary">Copy summary to clipboard</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <!-- RIGHT: OUTPUT -->
+    <div>
+      <div class="card">
+        <h3>Generated files &amp; commands</h3>
+        <div class="sub">Pick a tab, copy the text, or download it as a file with the correct name.</div>
+        <div class="tabs" id="tabs"></div>
+        <pre id="output">// Fill in the form on the left and click "Generate everything".</pre>
+        <div class="btnrow" style="margin-top:12px;">
+          <button id="copyOneBtn" class="secondary">Copy this file</button>
+          <button id="downloadOneBtn" class="secondary">Download this file</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Quick checklist (generated for your values)</h3>
+        <div class="sub">Follow this order. Each step links to the matching doc in the kit.</div>
+        <ol id="checklist" style="padding-left:20px; color:var(--muted); font-size:14px;">
+          <li>Fill in the form and generate your files.</li>
+          <li>Open <code>docs/01-know-your-firmware.md</code> to identify your firmware.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Stadia WiFi Kit &middot; Forked from <a href="https://github.com/jkfran/stadiacast">stadiacast</a>
+  &middot; Offline config generator, no tracking, no uploads.
+</footer>
+
+<script>
+"use strict";
+
+const FILES = [
+  { key: "start",        name: "start-receiver.vbs",        label: "Start receiver" },
+  { key: "restart",      name: "restart-receiver.vbs",      label: "Restart receiver" },
+  { key: "autostart",    name: "autostart-receiver.vbs",    label: "Autostart (logon)" },
+  { key: "dnsmasq",      name: "dnsmasq-stadia.conf",       label: "Router dnsmasq" },
+  { key: "provision",    name: "provision-wifi.bat",        label: "WiFi pairing (BT)" },
+  { key: "findmac",      name: "find-controller-mac.bat",   label: "Find WiFi MAC (no router)" },
+  { key: "flasher",      name: "start-flasher.bat",         label: "Start flasher" },
+  { key: "backup",       name: "backup-169429.bat",         label: "Backup 169429" },
+  { key: "summary",      name: "MY-SETUP.txt",              label: "Setup summary" }
+];
+
+let generated = {};
+let activeKey = "start";
+
+function $(id) { return document.getElementById(id); }
+
+function log(msg, isErr) {
+  const el = $("status");
+  el.textContent = msg;
+  el.className = "status" + (isErr ? " err" : "");
+}
+
+function v(id) { return $(id).value.trim(); }
+
+// Controller identity is detected after pairing, not typed by the user.
+// Before detection, fall back to a default IP and a clearly marked MAC placeholder.
+function ctrlIp() { return v("controllerIp") || "192.168.1.155"; }
+function ctrlMac() { return v("controllerMac") || "aa:bb:cc:dd:ee:ff"; }
+function detected() { return !!(v("controllerIp") && v("controllerMac")); }
+
+function applyDetected(mac, ip) {
+  if (mac) $("controllerMac").value = mac.trim();
+  if (ip) $("controllerIp").value = ip.trim();
+  const view = $("detectedView");
+  if (detected()) {
+    view.innerHTML = '<span style="color:var(--ok);">Detected &amp; applied</span><br>' +
+      'MAC&nbsp; : <b style="color:var(--text);">' + ctrlMac() + '</b><br>' +
+      'IP&nbsp;&nbsp; : <b style="color:var(--text);">' + ctrlIp() + '</b><br>' +
+      '<span style="color:var(--muted);">You can now regenerate to finalize the router rule.</span>';
+  }
+}
+
+function loadDetectedFile(file) {
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const text = String(e.target.result || "");
+    let mac = "", ip = "";
+    text.split(/\r?\n/).forEach(function (line) {
+      const m = line.match(/^\s*(?:CONTROLLER_)?MAC\s*[=:]\s*(\S+)/i);
+      const i = line.match(/^\s*(?:CONTROLLER_)?IP\s*[=:]\s*(\S+)/i);
+      if (m) mac = m[1].replace(/-/g, ":").toLowerCase();
+      if (i) ip = i[1];
+    });
+    if (!mac && !ip) { log("No MAC/IP found in that file. Use the file written by find-controller-mac.bat.", true); return; }
+    applyDetected(mac, ip);
+    log("Detected values loaded from " + file.name + ". Regenerate to apply.", false);
+  };
+  reader.readAsText(file);
+}
+
+function crlf(s) { return s.replace(/\r?\n/g, "\r\n"); }
+
+function logDir() {
+  return $("logMode").value === "auto"
+    ? v("projectDir") + "\\logs\\autostart"
+    : v("logDirCustom") || (v("projectDir") + "\\logs\\autostart");
+}
+
+function receiverArgs() {
+  const a = [];
+  a.push("--preset live");
+  a.push("--advertise-ip " + v("pcIp"));
+  a.push("--controller-ip " + ctrlIp());
+  a.push("--dns-upstream " + v("routerIp"));
+  a.push('--dns-redirect "time.google.com,clients3.google.com,clients4.google.com,connectivitycheck.gstatic.com,connectivitycheck.tencent.com,www.google.com"');
+  a.push("--gamepad vigem");
+  if ($("optAudio").checked) a.push("--audio-source system");
+  a.push('--log-dir "' + logDir() + '"');
+  return a.join(" ");
+}
+
+function vbsGuard(withMsg) {
+  return withMsg
+    ? 'If procs.Count > 0 Then\n    MsgBox "Receiver is already running. Nothing to do.", 64, "Stadia Receiver"\n    WScript.Quit\nEnd If'
+    : 'If procs.Count > 0 Then WScript.Quit';
+}
+
+function vbsHeader(comment) {
+  return "' " + comment + "\n' Generated by Stadia WiFi Kit offline config generator.\nOption Explicit\nDim ws, wmi, procs, cmd, logDir, fso, env, ffmpegBin\n";
+}
+
+function vbsBody(afterGuard, audioBlock) {
+  return "\n" +
+    "logDir = \"" + logDir() + "\"\n" +
+    "Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+    "If Not fso.FolderExists(logDir) Then fso.CreateFolder(logDir)\n\n" +
+    "Set ws = CreateObject(\"WScript.Shell\")\n" +
+    "ws.CurrentDirectory = \"" + v("projectDir") + "\\stadiacast\\stadiacast-1.2.0-windows-x86_64\"\n\n" +
+    audioBlock +
+    "cmd = \"stadiacast.exe " + receiverArgs().replace(/"/g, '""') + "\"\n\n" +
+    afterGuard;
+}
+
+function audioBlockVbs() {
+  if (!$("optAudio").checked) return "";
+  return "' Portable ffmpeg (libopus) on PATH for headset audio\n" +
+         "ffmpegBin = \"" + v("projectDir") + "\\tools\\ffmpeg\\bin\"\n" +
+         "Set env = ws.Environment(\"PROCESS\")\n" +
+         "env(\"PATH\") = ffmpegBin & \";\" & env(\"PATH\")\n\n";
+}
+
+function buildStart() {
+  return vbsHeader("Start receiver - double click to run") +
+    "\nSet wmi = GetObject(\"winmgmts:\\\\.\\root\\cimv2\")\n" +
+    "Set procs = wmi.ExecQuery(\"Select * from Win32_Process Where Name = 'stadiacast.exe'\")\n" +
+    vbsGuard(true) + "\n" +
+    vbsBody(
+      'ws.Run cmd, 0, False\nMsgBox "Receiver started. Press the Stadia button (~1 s) to connect.", 64, "Stadia Receiver"\n',
+      audioBlockVbs()
+    );
+}
+
+function buildRestart() {
+  return vbsHeader("Restart receiver - closes the old one, then starts fresh") +
+    "\nSet wmi = GetObject(\"winmgmts:\\\\.\\root\\cimv2\")\n" +
+    "Set procs = wmi.ExecQuery(\"Select * from Win32_Process Where Name = 'stadiacast.exe'\")\n" +
+    "If procs.Count > 0 Then\n    For Each p In procs\n        p.Terminate()\n    Next\n    WScript.Sleep 2500\nEnd If\n" +
+    vbsBody(
+      'ws.Run cmd, 0, False\nMsgBox "Receiver restarted. Press the Stadia button (~1 s) to reconnect.", 64, "Stadia Receiver"\n',
+      audioBlockVbs()
+    ).replace("Dim ws, wmi, procs, cmd", "Dim ws, wmi, procs, p, cmd");
+}
+
+function buildAutostart() {
+  return vbsHeader("Autostart at logon - put this file in your Startup folder") +
+    "\nSet wmi = GetObject(\"winmgmts:\\\\.\\root\\cimv2\")\n" +
+    "Set procs = wmi.ExecQuery(\"Select * from Win32_Process Where Name = 'stadiacast.exe'\")\n" +
+    vbsGuard(false) + "\n" +
+    vbsBody('ws.Run cmd, 0, False\n', audioBlockVbs());
+}
+
+function buildDnsmasq() {
+  let s = "# Stadia WiFi Kit - router DNS override\n" +
+          "# Install on your router, applying ONLY to the controller's MAC.\n" +
+          "# Padavan: /etc/storage/dnsmasq/dnsmasq.d/stadiacast.conf\n" +
+          "# OpenWrt: /etc/dnsmasq.d/stadiacast.conf\n\n" +
+          "dhcp-mac=set:stadia," + ctrlMac() + "\n" +
+          "dhcp-option=tag:stadia,option:dns-server," + v("pcIp") + "\n";
+  if ($("optStatic").checked) {
+    s += "dhcp-host=" + ctrlMac() + "," + ctrlIp() + "\n";
+  }
+  s += "\n# Then: dnsmasq --test && restart dnsmasq\n";
+  return s;
+}
+
+function buildProvision() {
+  return "@echo off\nchcp 65001 >nul\n" +
+    "cd /d \"" + v("projectDir") + "\\tools\\stadiacast\"\n" +
+    "echo ============================================\n" +
+    "echo  Pair the controller to WiFi over Bluetooth\n" +
+    "echo  SSID: " + v("ssid") + "\n" +
+    "echo ============================================\n" +
+    "echo.\n" +
+    "echo Step 1: put the controller in pairing mode (orange LED blinking).\n" +
+    "echo Step 2: run the scan command below, copy the Bluetooth address.\n" +
+    "echo   (This BLE address is ONLY for pairing. It is NOT the WiFi MAC.)\n" +
+    "echo.\n" +
+    "stadiacast-provision.exe scan\n" +
+    "echo.\n" +
+    "set /a ADDR=0\n" +
+    "set /p ADDR=Paste the Bluetooth address from scan: \n" +
+    "stadiacast-provision.exe provision --address %ADDR% --ssid " + v("ssid") + "\n" +
+    "echo.\n" +
+    "echo Now wake the controller so it joins WiFi.\n" +
+    "echo THEN open your router's DHCP client list and find the device\n" +
+    "echo whose hostname starts with Stadia-. Its MAC is the WiFi MAC.\n" +
+    "echo Go back to configurator.html, enter that MAC + IP, and regenerate.\n" +
+    "echo See docs/10-find-the-controller-mac.md. The BLE address above is NOT it.\n" +
+    "pause\n";
+}
+
+function buildFindMac() {
+  const subnet = v("pcIp").split(".").slice(0, 3).join(".");
+  const out = v("projectDir") + "\\detected-values.txt";
+  return "@echo off\nchcp 65001 >nul\nsetlocal EnableDelayedExpansion\n" +
+    "echo ============================================\n" +
+    "echo  Detect the controller WiFi MAC + IP\n" +
+    "echo  (no router login needed)\n" +
+    "echo ============================================\n" +
+    "echo.\n" +
+    "echo First: wake the controller (short Stadia press) so it joins WiFi.\n" +
+    "echo It must be on the SAME network as this PC (" + v("pcIp") + ").\n" +
+    "echo.\n" +
+    "pause\n" +
+    "echo.\n" +
+    "echo Pinging " + subnet + ".1-254 to fill the ARP cache (30-60 s)...\n" +
+    "for /L %%i in (1,1,254) do ping -n 1 -w 100 " + subnet + ".%%i >nul 2>&1\n" +
+    "echo.\n" +
+    "echo ===== Google-OUI devices (MAC starts d4-f5-47) =====\n" +
+    "arp -a | findstr /i \"d4-f5-47\"\n" +
+    "echo.\n" +
+    "set \"OUTFILE=" + out + "\"\n" +
+    "> \"!OUTFILE!\" echo # Stadia WiFi Kit - detected controller values\n" +
+    ">>\"!OUTFILE!\" echo # Load this file in configurator.html, or give it to your AI assistant.\n" +
+    "set \"FOUND=0\"\n" +
+    "for /f \"tokens=1,2\" %%A in ('arp -a ^| findstr /i \"d4-f5-47\"') do (\n" +
+    "  set \"DIP=%%A\"\n" +
+    "  set \"DMAC=%%B\"\n" +
+    "  set \"DMAC=!DMAC:-=:!\"\n" +
+    "  if \"!FOUND!\"==\"0\" (\n" +
+    "    >>\"!OUTFILE!\" echo CONTROLLER_MAC=!DMAC!\n" +
+    "    >>\"!OUTFILE!\" echo CONTROLLER_IP=!DIP!\n" +
+    "    set \"FOUND=1\"\n" +
+    "  ) else (\n" +
+    "    >>\"!OUTFILE!\" echo # other candidate: !DIP! !DMAC!\n" +
+    "  )\n" +
+    ")\n" +
+    "if \"!FOUND!\"==\"0\" >>\"!OUTFILE!\" echo # NOT DETECTED - controller not on this subnet yet.\n" +
+    "echo.\n" +
+    "if \"!FOUND!\"==\"1\" (\n" +
+    "  echo Detected! Wrote: !OUTFILE!\n" +
+    "  type \"!OUTFILE!\"\n" +
+    "  echo.\n" +
+    "  echo Now load that file in configurator.html and click Generate again.\n" +
+    ") else (\n" +
+    "  echo Nothing detected. Make sure the controller is awake and on this\n" +
+    "  echo subnet, then run again. Fallback: router DHCP list (docs/10).\n" +
+    ")\n" +
+    "pause\n";
+}
+
+function buildFlasher() {
+  return "@echo off\n" +
+    "cd /d \"" + v("projectDir") + "\\tools\\flasher\\src\"\n" +
+    "echo ============================================\n" +
+    "echo  Local Stadia flasher - 316382 dogfood build\n" +
+    "echo  Open Google Chrome at http://localhost:5000\n" +
+    "echo  Keep this window open while flashing.\n" +
+    "echo ============================================\n" +
+    "start \"\" \"http://localhost:5000\"\n" +
+    "\"" + v("pythonExe") + "\" -m http.server 5000 --bind 127.0.0.1\n";
+}
+
+function buildBackup() {
+  return "@echo off\nchcp 65001 >nul\n" +
+    "cd /d \"" + v("projectDir") + "\\tools\\stadiatool\\stadiatool\"\n" +
+    "set \"PY=" + v("pythonExe") + "\"\n" +
+    "set \"FW=" + v("projectDir") + "\\firmware\"\n" +
+    "set \"LOG=%FW%\\backup-progress.log\"\n" +
+    "echo ============================================\n" +
+    "echo  Backup factory firmware 169429\n" +
+    "echo  Part 1: head  256 KB   (~9 min)\n" +
+    "echo  Part 2: App B 7.75 MB  (~4 hours)\n" +
+    "echo  Total ~4.5 h. Keep USB plugged. Do NOT sleep.\n" +
+    "echo ============================================\n\n" +
+    "echo Step 1/3: ensure flashloader is running...\n" +
+    "\"%PY%\" stadiatool.py flashloader > \"%LOG%\" 2>&1\n\n" +
+    "echo Step 2/3: dump head (0 - 0x40000)...\n" +
+    "\"%PY%\" stadiatool.py dump 0 0x40000 \"%FW%\\backup-169429-part1-head.bin\" >> \"%LOG%\" 2>&1\n" +
+    "if errorlevel 1 goto fail\n\n" +
+    "echo Step 3/3: dump App B (0x840000 - 0x1000000), about 4 hours...\n" +
+    "\"%PY%\" stadiatool.py dump 0x840000 0x1000000 \"%FW%\\backup-169429-part2-appb.bin\" >> \"%LOG%\" 2>&1\n" +
+    "if errorlevel 1 goto fail\n\n" +
+    "echo.\n" +
+    "echo DONE. Expected sizes:\n" +
+    "echo   part1-head.bin    262144 bytes\n" +
+    "echo   part2-appb.bin  8126464 bytes\n" +
+    "dir \"%FW%\\backup-169429-part1-head.bin\" \"%FW%\\backup-169429-part2-appb.bin\"\n" +
+    "echo Copy BOTH files to a USB stick NOW, then verify hashes.\n" +
+    "pause\nexit /b\n\n" +
+    ":fail\n" +
+    "echo !!! FAILED. Last log lines:\n" +
+    "powershell -NoProfile -Command \"Get-Content '%LOG%' -Tail 12\"\n" +
+    "echo Do NOT retry blindly. Stop and ask for help.\n" +
+    "pause\n";
+}
+
+function buildSummary() {
+  let s = "============================================\n" +
+          "  MY STADIA WIFI KIT - SETUP SUMMARY\n" +
+          "============================================\n\n" +
+          "PC IP              : " + v("pcIp") + "\n" +
+          "Router IP          : " + v("routerIp") + "\n" +
+          "Controller IP      : " + ctrlIp() + (detected() ? " (detected)" : " (DEFAULT - not detected yet)") + "\n" +
+          "Controller MAC     : " + ctrlMac() + (detected() ? " (detected)" : " (PLACEHOLDER - detect before installing DNS rule)") + "\n" +
+          "WiFi SSID          : " + v("ssid") + "\n" +
+          "WiFi password      : " + (v("wifiPass") ? "(filled in generated scripts where needed)" : "(not provided)") + "\n" +
+          "Project folder     : " + v("projectDir") + "\n" +
+          "Python             : " + v("pythonExe") + "\n" +
+          "Log folder         : " + logDir() + "\n" +
+          "Headset audio      : " + ($("optAudio").checked ? "ON" : "OFF") + "\n\n" +
+          "RECEIVER COMMAND (for reference):\n" +
+          "stadiacast.exe " + receiverArgs() + "\n\n" +
+          "ORDER OF OPERATIONS:\n" +
+          "1. docs/01-know-your-firmware.md   - identify your firmware\n" +
+          "2. docs/02-upgrade-from-169429.md  - only if you have 169429\n" +
+          "3. docs/03-retail-firmware.md      - if you already have 316382 / 282115\n" +
+          "4. Pair WiFi with provision-wifi.bat (no MAC needed yet).\n" +
+          "5. Run find-controller-mac.bat on this PC - it detects the WiFi MAC + IP\n" +
+          "   and writes detected-values.txt (no router login, NOT the Bluetooth address).\n" +
+          "   Load that file in this page (or let your AI assistant apply the values),\n" +
+          "   then click Generate again. See docs/10-find-the-controller-mac.md.\n" +
+          "6. docs/04-router-and-dns.md       - install dnsmasq-stadia.conf on router\n" +
+          "7. docs/05-receiver.md             - run start-receiver.vbs, verify controller\n" +
+          "8. docs/06-audio-and-daily-use.md  - headset audio, daily on/off\n" +
+          "9. docs/07-troubleshooting.md      - if something breaks\n" +
+          "10. Copy autostart-receiver.vbs into your Startup folder\n\n" +
+          "SAFETY RULE: never flash before the 169429 backup is verified.\n\n" +
+          "Forked from stadiacast: https://github.com/jkfran/stadiacast\n";
+  return s;
+}
+
+function buildChecklist() {
+  const items = [
+    "Identify firmware: <code>docs/01-know-your-firmware.md</code>",
+    $("optAudio").checked ? "Install ffmpeg with libopus into <code>" + v("projectDir") + "\\tools\\ffmpeg\\bin</code>" : null,
+    "169429 owner? Back up first: <code>backup-169429.bat</code>",
+    "169429 owner? Flash 316382: <code>start-flasher.bat</code>",
+    "Pair controller to WiFi <code>" + v("ssid") + "</code>: <code>provision-wifi.bat</code> (no MAC needed yet)",
+    "Run <code>find-controller-mac.bat</code> on this PC - detects real WiFi MAC + IP (not Bluetooth) and writes <code>detected-values.txt</code>",
+    "Load <code>detected-values.txt</code> in this page (or let your AI apply the values), then regenerate - you never type the MAC or IP",
+    "Install <code>dnsmasq-stadia.conf</code> on router <code>" + v("routerIp") + "</code>",
+    "Start receiver: <code>start-receiver.vbs</code> (press Stadia button ~1 s)",
+    "Enable autostart: copy <code>autostart-receiver.vbs</code> to Startup folder",
+    "If it breaks: <code>restart-receiver.vbs</code>, then <code>docs/07-troubleshooting.md</code>"
+  ].filter(Boolean);
+  $("checklist").innerHTML = items.map((x, i) => "<li>" + x + "</li>").join("");
+}
+
+function generate() {
+  if (!v("pcIp")) {
+    log("Please fill in at least the PC IP address.", true);
+    return;
+  }
+  generated = {
+    start: crlf(buildStart()),
+    restart: crlf(buildRestart()),
+    autostart: crlf(buildAutostart()),
+    dnsmasq: crlf(buildDnsmasq()),
+    provision: crlf(buildProvision()),
+    findmac: crlf(buildFindMac()),
+    flasher: crlf(buildFlasher()),
+    backup: crlf(buildBackup()),
+    summary: crlf(buildSummary())
+  };
+  renderTabs();
+  showFile("start");
+  buildChecklist();
+  if (detected()) {
+    log("Generated " + FILES.length + " files with detected controller values. Offline, nothing uploaded.");
+  } else {
+    log("Generated " + FILES.length + " files. Controller values not detected yet - pairing/detection scripts are ready, re-generate after loading detected-values.txt.", false);
+  }
+}
+
+function renderTabs() {
+  $("tabs").innerHTML = FILES.map(f =>
+    '<div class="tab' + (f.key === activeKey ? ' active' : '') + '" data-key="' + f.key + '">' + f.label + '</div>'
+  ).join("");
+  $("tabs").querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => { activeKey = t.dataset.key; renderTabs(); showFile(activeKey); });
+  });
+}
+
+function showFile(key) {
+  $("output").textContent = generated[key] || "// Nothing generated yet.";
+}
+
+function downloadText(name, text) {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function copyText(text, msg) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => log(msg)).catch(() => fallbackCopy(text, msg));
+  } else fallbackCopy(text, msg);
+}
+
+function fallbackCopy(text, msg) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); log(msg); } catch (e) { log("Copy failed. Select the text and copy manually.", true); }
+  document.body.removeChild(ta);
+}
+
+function downloadAll() {
+  if (!Object.keys(generated).length) { log("Generate first.", true); return; }
+  // Minimal ZIP writer (STORE, no compression) - fully offline, no library.
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+  const crcTable = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; }
+    return t;
+  })();
+  function crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function u16(n) { return [n & 0xFF, (n >> 8) & 0xFF]; }
+  function u32(n) { return [n & 0xFF, (n >> 8) & 0xFF, (n >> 16) & 0xFF, (n >>> 24) & 0xFF]; }
+  FILES.forEach(f => {
+    const nameBytes = enc.encode(f.name);
+    const data = enc.encode(generated[f.key]);
+    const crc = crc32(data);
+    const local = [].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(data.length), u32(data.length), u16(nameBytes.length), u16(0), Array.from(nameBytes), Array.from(data));
+    const lb = new Uint8Array(local);
+    parts.push(lb);
+    const cd = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(data.length), u32(data.length), u16(nameBytes.length), u16(0), u16(0),
+      u16(0), u16(0), u32(0), u32(offset), Array.from(nameBytes));
+    central.push(new Uint8Array(cd));
+    offset += lb.length;
+  });
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const end = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(FILES.length), u16(FILES.length), u32(cdSize), u32(offset), u16(0)));
+  const all = new Blob(parts.concat(central, [end]), { type: "application/zip" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(all); a.download = "stadia-wifi-kit-config.zip";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  log("Downloaded ZIP with all " + FILES.length + " generated files.");
+}
+
+$("detectedFile").addEventListener("change", function (e) {
+  const f = e.target.files && e.target.files[0];
+  if (f) loadDetectedFile(f);
+});
+$("applyManualBtn").addEventListener("click", function () {
+  const mac = v("controllerMacManual"), ip = v("controllerIpManual");
+  if (!mac && !ip) { log("Enter the detected MAC and/or IP first.", true); return; }
+  applyDetected(mac, ip);
+  log("Detected values applied. Regenerate to finalize.", false);
+});
+
+$("genBtn").addEventListener("click", generate);
+$("copyBtn").addEventListener("click", () => {
+  if (!Object.keys(generated).length) { log("Generate first.", true); return; }
+  copyText(generated.summary, "Setup summary copied to clipboard.");
+});
+$("copyOneBtn").addEventListener("click", () => {
+  if (!generated[activeKey]) { log("Generate first.", true); return; }
+  const f = FILES.find(x => x.key === activeKey);
+  copyText(generated[activeKey], f.name + " copied to clipboard.");
+});
+$("downloadOneBtn").addEventListener("click", () => {
+  if (!generated[activeKey]) { log("Generate first.", true); return; }
+  const f = FILES.find(x => x.key === activeKey);
+  downloadText(f.name, generated[activeKey]);
+  log(f.name + " downloaded.");
+});
+$("downloadAllBtn").addEventListener("click", downloadAll);
+$("logMode").addEventListener("change", () => {
+  $("logDirCustom").style.display = $("logMode").value === "custom" ? "block" : "none";
+});
+</script>
+</body>
+</html>

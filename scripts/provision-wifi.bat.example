@@ -1,0 +1,29 @@
+@echo off
+chcp 65001 >nul
+REM ===================================================================
+REM  Stadia WiFi Kit - pair the controller to WiFi over Bluetooth
+REM  TEMPLATE: replace every <PLACEHOLDER> before running.
+REM  Easier: generate a filled version with configurator.html.
+REM
+REM  Bluetooth is used ONLY to deliver WiFi credentials.
+REM  The gamepad itself runs over WiFi.
+REM ===================================================================
+
+cd /d "<PROJECT_DIR>\tools\stadiacast"
+echo.
+echo SSID to configure: <WIFI_SSID>
+echo.
+echo 1. Put the controller in pairing mode (orange LED blinking).
+echo    New controller: short-press Stadia once.
+echo    Otherwise: hold Stadia 4 s to power off, then hold Y + short-press Stadia.
+echo.
+echo 2. Run the scan below and copy the Bluetooth address it prints.
+echo.
+stadiacast-provision.exe scan
+echo.
+set "ADDR="
+set /p ADDR=Paste the Bluetooth address from scan: 
+stadiacast-provision.exe provision --address %ADDR% --ssid <WIFI_SSID>
+echo.
+echo Done. Find the controller MAC in your router DHCP lease table.
+pause

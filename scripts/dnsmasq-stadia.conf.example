@@ -1,0 +1,17 @@
+# Stadia WiFi Kit - router DNS override (TEMPLATE)
+# Replace every <PLACEHOLDER> before installing.
+# Easier: generate a filled version with configurator.html.
+#
+# Padavan: /etc/storage/dnsmasq/dnsmasq.d/stadiacast.conf
+# OpenWrt / iStoreOS: /etc/dnsmasq.d/stadiacast.conf
+#
+# This applies ONLY to the controller's MAC. Other devices are unaffected.
+
+dhcp-mac=set:stadia,<CONTROLLER_MAC>
+dhcp-option=tag:stadia,option:dns-server,<PC_IP>
+dhcp-host=<CONTROLLER_MAC>,<CONTROLLER_IP>
+
+# Then:
+#   dnsmasq --test
+#   restart dnsmasq (web UI or /etc/init.d/dnsmasq restart)
+# Power the controller off and on so it gets a fresh lease.

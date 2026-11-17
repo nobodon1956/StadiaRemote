@@ -1,0 +1,47 @@
+@echo off
+chcp 65001 >nul
+REM ===================================================================
+REM  Stadia WiFi Kit - backup factory firmware 169429
+REM  TEMPLATE: replace every <PLACEHOLDER> before running.
+REM  Easier: generate a filled version with configurator.html.
+REM
+REM  RULE: never flash before this backup is verified.
+REM  Takes about 4.5 hours. Keep USB plugged. Do not let the PC sleep.
+REM ===================================================================
+
+cd /d "<PROJECT_DIR>\tools\stadiatool\stadiatool"
+set "PY=<PYTHON_EXE>"
+set "FW=<PROJECT_DIR>\firmware"
+set "LOG=%FW%\backup-progress.log"
+
+echo Part 1: head/IVT 256 KB (~9 min)
+echo Part 2: App B 7.75 MB (~4 hours)
+echo Keep the controller connected and the PC awake.
+echo.
+
+echo Step 1/3: ensure flashloader is running...
+"%PY%" stadiatool.py flashloader > "%LOG%" 2>&1
+
+echo Step 2/3: dump head (0 - 0x40000)...
+"%PY%" stadiatool.py dump 0 0x40000 "%FW%\backup-169429-part1-head.bin" >> "%LOG%" 2>&1
+if errorlevel 1 goto fail
+
+echo Step 3/3: dump App B (0x840000 - 0x1000000)...
+"%PY%" stadiatool.py dump 0x840000 0x1000000 "%FW%\backup-169429-part2-appb.bin" >> "%LOG%" 2>&1
+if errorlevel 1 goto fail
+
+echo.
+echo DONE - expected sizes:
+echo   backup-169429-part1-head.bin    262144 bytes
+echo   backup-169429-part2-appb.bin  8126464 bytes
+dir "%FW%\backup-169429-part1-head.bin" "%FW%\backup-169429-part2-appb.bin"
+echo.
+echo Hash them, then copy BOTH files to a USB stick.
+pause
+exit /b
+
+:fail
+echo !!! FAILED. Last log lines:
+powershell -NoProfile -Command "Get-Content '%LOG%' -Tail 12"
+echo Do NOT retry blindly. Stop and ask for help.
+pause

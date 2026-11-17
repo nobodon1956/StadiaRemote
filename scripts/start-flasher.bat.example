@@ -1,0 +1,17 @@
+@echo off
+REM ===================================================================
+REM  Stadia WiFi Kit - start the local WebHID flasher
+REM  TEMPLATE: replace every <PLACEHOLDER> before running.
+REM  Easier: generate a filled version with configurator.html.
+REM
+REM  Use Google Chrome. Keep this window open while flashing.
+REM ===================================================================
+
+cd /d "<PROJECT_DIR>\tools\flasher\src"
+echo ============================================
+echo  Local Stadia flasher - 316382 dogfood build
+echo  Open Google Chrome at http://localhost:5000
+echo  Keep this window open while flashing.
+echo ============================================
+start "" "http://localhost:5000"
+"<PYTHON_EXE>" -m http.server 5000 --bind 127.0.0.1
