@@ -1,4 +1,4 @@
-# Stadia WiFi Kit
+# StadiaRemote
 
 **Turn a factory-firmware Google Stadia controller into a Wi-Fi gamepad for your PC.**
 
@@ -15,6 +15,59 @@
 > original **[stadiacast](https://github.com/jkfran/stadiacast)** project, which ships
 > versions for **Windows, macOS and Linux**. Thanks again to the original author for
 > their work.
+
+
+## Why this controller?
+
+Google launched its Stadia cloud-gaming service in November 2019, and with it a controller
+unlike any other: a PlayStation-style layout, a 3.5 mm headset jack, a microphone, rumble,
+a huge 2000 mAh battery, Bluetooth 4.2 (used **only** to pair Wi-Fi, never to play), and —
+unusually — **Wi-Fi, including the 5 GHz band**.
+
+The original idea was that the controller talked to Google's cloud through your home
+router, with your inputs showing up on a Google TV. When Stadia shut down in 2023, Google
+released a web tool that turned the controller into a plain Bluetooth gamepad (with rumble
+broken), and by 2026 even that page was gone. Factory-sealed, never-opened controllers now
+sell for about ¥39–50 — the starting point of this whole project.
+
+### How stadiacast brings it back
+
+[stadiacast](https://github.com/jkfran/stadiacast) hijacks the controller's requests to
+Google's domains on your router and redirects them to your PC. The PC then impersonates the
+old Stadia cloud, so the controller keeps using its original Wi-Fi protocol while your game
+sees a standard virtual gamepad.
+
+### Why it is the best fit for LAN streaming
+
+Suppose your PC is in the bedroom and your TV is in the living room:
+
+- **Gamepad connected to the TV:** the TV sits next to the router, whose 2.4 GHz signal
+  (and other gear such as Switch controllers) interferes. The path is long — controller →
+  TV → stream back to the PC → image back to the TV — so latency stacks up.
+- **Gamepad connected to the PC over Bluetooth:** Bluetooth is 2.4 GHz and does not pass
+  through walls well. Fine for music, not for a game that needs instant feedback.
+- **Gamepad connected over Wi-Fi:** 5 GHz means wide bandwidth, and mesh access points
+  cover the whole home. As long as you are inside your Wi-Fi coverage, latency stays low.
+
+This also means **whole-home roaming**: start a game on the living-room TV, then pick up a
+tablet and carry the controller to the bathroom — with Bluetooth you would have to re-pair
+it to a new device, but a Wi-Fi Stadia controller is already talking to the PC, so nothing
+needs to change.
+
+### Advantages at a glance
+
+1. Wi-Fi mode keeps rumble; the Bluetooth-conversion firmware loses it.
+2. Wi-Fi bandwidth is ample, so the 3.5 mm headset works (wired audio sounds especially
+   good). The microphone does not work with stadiacast.
+3. Works with **any** streaming stack — Sunshine + Moonlight, RustDesk, UU Remote, even
+   tools with no gamepad mapping — because the gamepad never goes through the streaming
+   app at all.
+4. Connects on 5 GHz Wi-Fi; with good coverage it stays stable, unlike Bluetooth or
+   2.4 GHz dongles that drop out.
+5. A 2000 mAh battery — one of the largest ever put in a controller.
+6. Wired (USB) play still works after flashing the Wi-Fi firmware.
+7. Solid build quality for the price.
+8. stadiacast itself supports Windows, macOS and Linux (this kit's scripts are Windows-only).
 
 ---
 
