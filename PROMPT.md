@@ -109,7 +109,7 @@ CASE B - firmware is 316382 or 282115:
 
 FOR BOTH CASES:
   * Open configurator.html with me. The page has NO field for the controller MAC or IP -
-    I never type those. Fill in only PC IP, router IP, WiFi SSID/password and paths,
+    I never type those. Fill in only PC IP, router IP, WiFi SSID and paths (never the WiFi password — it is typed only into the provision tool's own prompt),
     then generate. Tell me this first pass is for the pairing/detection scripts.
   * Guide me through Wi-Fi pairing with provision-wifi.bat. Remind me that Bluetooth is
     used only to deliver WiFi credentials; the gamepad itself runs over WiFi. Explain that

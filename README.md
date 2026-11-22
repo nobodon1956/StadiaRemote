@@ -132,7 +132,7 @@ Open `configurator.html` in any browser, fill in:
 
 - PC IP address
 - Router IP address
-- Wi-Fi SSID and password
+- Wi-Fi SSID (the password is never entered in the configurator — the provision tool asks for it in its own prompt)
 - Project folder and Python path
 
 You do **not** enter the controller's IP or MAC - there are no fields for them. After

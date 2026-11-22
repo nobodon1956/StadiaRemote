@@ -458,7 +458,7 @@ function buildFlasher() {
     "echo  Open Google Chrome at http://localhost:5000\n" +
     "echo  Keep this window open while flashing.\n" +
     "echo ============================================\n" +
-    "start \"\" \"http://localhost:5000\"\n" +
+    "start \"\" cmd /c \"timeout /t 2 >nul & start http://localhost:5000\"\n" +
     "\"" + v("pythonExe") + "\" -m http.server 5000 --bind 127.0.0.1\n";
 }
 
@@ -530,6 +530,11 @@ function buildSummary() {
           "10. Copy autostart-receiver.vbs into your Startup folder\n\n" +
           "SAFETY RULE: never flash before the 169429 backup is verified.\n\n" +
           "Forked from stadiacast: https://github.com/jkfran/stadiacast\n";
+  if ($("optVoice").checked) {
+    s += "\nAI AGENT NOTE (from PROMPT.md):\n" +
+         "- Follow PROMPT.md strictly; never flash before the backup is verified.\n" +
+         "- Confirm each hardware state (LED color, log lines) out loud before advancing.\n";
+  }
   return s;
 }
 
@@ -687,6 +692,34 @@ $("downloadAllBtn").addEventListener("click", downloadAll);
 $("logMode").addEventListener("change", () => {
   $("logDirCustom").style.display = $("logMode").value === "custom" ? "block" : "none";
 });
+// Persist non-sensitive fields across the two generate passes (pairing, then
+// detection). There is no WiFi password field, so nothing secret is stored.
+var PERSIST = ["pcIp", "routerIp", "ssid", "projectDir", "pythonExe", "logDirCustom", "controllerMacManual", "controllerIpManual"];
+function saveForm() {
+  try {
+    var d = {};
+    PERSIST.forEach(function (id) { d[id] = v(id); });
+    d.logMode = $("logMode").value;
+    d.optAudio = $("optAudio").checked; d.optStatic = $("optStatic").checked; d.optVoice = $("optVoice").checked;
+    localStorage.setItem("stadiaKitForm", JSON.stringify(d));
+  } catch (e) {}
+}
+function loadForm() {
+  try {
+    var d = JSON.parse(localStorage.getItem("stadiaKitForm") || "null");
+    if (!d) return;
+    PERSIST.forEach(function (id) { if (d[id]) $(id).value = d[id]; });
+    if (d.logMode) { $("logMode").value = d.logMode; $("logDirCustom").style.display = d.logMode === "custom" ? "block" : "none"; }
+    ["optAudio", "optStatic", "optVoice"].forEach(function (id) { if (typeof d[id] === "boolean") $(id).checked = d[id]; });
+  } catch (e) {}
+}
+PERSIST.forEach(function (id) { $(id).addEventListener("input", saveForm); });
+["logMode", "optAudio", "optStatic", "optVoice"].forEach(function (id) { $(id).addEventListener("change", saveForm); });
+$("clearSavedBtn").addEventListener("click", function () {
+  try { localStorage.removeItem("stadiaKitForm"); } catch (e) {}
+  log("Saved inputs cleared from this browser.");
+});
+loadForm();
 </script>
 </body>
 </html>
