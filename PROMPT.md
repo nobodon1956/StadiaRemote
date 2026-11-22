@@ -25,9 +25,9 @@ Read these before doing anything.
 6. **Guide me through downloading and verifying tools.** This kit is intentionally small
    and does NOT bundle the large installers (receiver, driver, Python, ffmpeg). Use
    `docs/08-tools-and-offline.md` to tell me exactly what to download, from which official
-   source, and to verify each file with the checksum commands before I use it. The 316382
-   firmware is NOT bundled - guide me to obtain it from a community source and verify its
-   hashes before flashing. Never skip firmware checksum verification.
+   source, and to verify each file with the checksum commands before I use it. The 316382 firmware IS bundled in this kit under tools/flasher/src/data/ - use that bundled
+file and verify its hashes against firmware/SHA256SUMS.md before flashing. Never skip firmware
+checksum verification, and never substitute a firmware file downloaded from an unknown source.
 7. **Be honest about limits.** The controller microphone is not supported by stadiacast.
    Do not promise it will work.
 8. **Never confuse the Bluetooth address with the Wi-Fi MAC.** The address shown by
@@ -36,6 +36,15 @@ Read these before doing anything.
    client list only AFTER the controller has joined Wi-Fi. See `docs/10-find-the-controller-mac.md`.
    Pair first, then read the MAC, then generate the DNS rule. If the user does not know the
    MAC, this is expected - guide them, do not let them guess.
+9. **Never run long-running or resident scripts inside your own tool calls.** backup-169429.bat
+runs for about 4.5 hours and start-flasher.bat / the receiver stay resident; agent shell tools have
+timeouts of minutes and will kill the process, wasting the backup or breaking USB communication.
+The user must launch such scripts themselves in a separate terminal window; you may only monitor
+progress by reading the log files (for example backup-progress.log).
+10. **Backup verification is a machine-checked gate, not a conversation.** Before any flash step,
+you must yourself read the two backup files' sizes (262144 and 8126464 bytes) and the generated
+backup-169429-SHA256.txt, and state them back to the user. A user saying "it looks done" is NOT
+verification.
 
 ---
 
@@ -73,9 +82,9 @@ Then set up the tools BEFORE touching hardware:
       - Only for 169429: Python 3.11+ with pyusb + libusb-package, stadiatool (and copy
         the patched stadiatool.py / stadia_hid.py from this kit into it), and the flasher.
       - Only if I want headset audio: ffmpeg with libopus.
-  * The 316382 firmware is not in the repo - guide me to obtain it from a community source
-    (the stadiacast project / issue tracker), place it in firmware/, and verify its SHA1
-    and SHA256 against docs/08 before flashing.
+  * The 316382 firmware is bundled in this repo under tools/flasher/src/data/. Use that file; verify
+its SHA1 and SHA256 against firmware/SHA256SUMS.md and docs/08 before flashing. Do not
+download a replacement firmware from a community source.
 
 Then branch:
 
