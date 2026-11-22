@@ -92,7 +92,7 @@
 <div class="wrap">
   <div class="notice">
     <b>Privacy:</b> this is a single HTML file with no network calls. Anything you type
-    (including your WiFi password) stays in this browser tab. Close the tab and it is gone.
+    stays in this browser tab. Close the tab and it is gone. (There is deliberately no WiFi password field — see step 1.)
     Generated files are saved by your browser only when you click Download.
   </div>
 
@@ -115,8 +115,7 @@
         <label for="ssid">WiFi SSID (network name)</label>
         <input type="text" id="ssid" value="" placeholder="MyHomeWiFi_5G">
         <div class="hint">Must be WPA2-Personal / AES. WPA3 is NOT supported by the controller.</div>
-        <label for="wifiPass">WiFi password</label>
-        <input type="password" id="wifiPass" value="" placeholder="your-wifi-password">
+        <div class="hint">No WiFi password field on purpose: the password is only ever typed into the provision tool's own prompt in provision-wifi.bat — never into this page, never into a generated file.</div>
         <div class="hint" style="margin-top:10px;">You do <b>not</b> enter the controller's IP or MAC anywhere. They are detected for you after pairing &mdash; see step 2 below.</div>
         <input type="hidden" id="controllerIp" value="">
         <input type="hidden" id="controllerMac" value="">
@@ -173,6 +172,7 @@
         <button id="genBtn">Generate everything</button>
         <button id="downloadAllBtn" class="secondary">Download all files (.zip)</button>
         <button id="copyBtn" class="secondary">Copy summary to clipboard</button>
+        <button id="clearSavedBtn" class="secondary">Clear saved inputs</button>
       </div>
       <div class="status" id="status"></div>
     </div>
@@ -234,6 +234,10 @@ function log(msg, isErr) {
 }
 
 function v(id) { return $(id).value.trim(); }
+function vbsEscape(s) { return String(s).replace(/[\r\n]/g, " ").replace(/"/g, '""'); }
+function batPct(s) { return String(s).replace(/%/g, "%%"); }
+function batEcho(s) { return batPct(String(s)).replace(/\^/g, "^^").replace(/&/g, "^&").replace(/\|/g, "^|").replace(/</g, "^<").replace(/>/g, "^>"); }
+function htmlEscape(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 
 // Controller identity is detected after pairing, not typed by the user.
 // Before detection, fall back to a default IP and a clearly marked MAC placeholder.
@@ -247,8 +251,8 @@ function applyDetected(mac, ip) {
   const view = $("detectedView");
   if (detected()) {
     view.innerHTML = '<span style="color:var(--ok);">Detected &amp; applied</span><br>' +
-      'MAC&nbsp; : <b style="color:var(--text);">' + ctrlMac() + '</b><br>' +
-      'IP&nbsp;&nbsp; : <b style="color:var(--text);">' + ctrlIp() + '</b><br>' +
+      'MAC&nbsp; : <b style="color:var(--text);">' + htmlEscape(ctrlMac()) + '</b><br>' +
+      'IP&nbsp;&nbsp; : <b style="color:var(--text);">' + htmlEscape(ctrlIp()) + '</b><br>' +
       '<span style="color:var(--muted);">You can now regenerate to finalize the router rule.</span>';
   }
 }
@@ -304,13 +308,13 @@ function vbsHeader(comment) {
 
 function vbsBody(afterGuard, audioBlock) {
   return "\n" +
-    "logDir = \"" + logDir() + "\"\n" +
+    "logDir = \"" + vbsEscape(logDir()) + "\"\n" +
     "Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
     "If Not fso.FolderExists(logDir) Then\n" +
 "    If Not fso.FolderExists(fso.GetParentFolderName(logDir)) Then fso.CreateFolder(fso.GetParentFolderName(logDir))\n" +
 "    fso.CreateFolder(logDir)\nEnd If\n\n" +
     "Set ws = CreateObject(\"WScript.Shell\")\n" +
-    "ws.CurrentDirectory = \"" + v("projectDir") + "\\stadiacast\\stadiacast-1.2.0-windows-x86_64\"\n\n" +
+    "ws.CurrentDirectory = \"" + vbsEscape(v("projectDir")) + "\\stadiacast\\stadiacast-1.2.0-windows-x86_64\"\n\n" +
     audioBlock +
     "cmd = \"stadiacast.exe " + receiverArgs().replace(/"/g, '""') + "\"\n\n" +
     afterGuard;
@@ -319,7 +323,7 @@ function vbsBody(afterGuard, audioBlock) {
 function audioBlockVbs() {
   if (!$("optAudio").checked) return "";
   return "' Portable ffmpeg (libopus) on PATH for headset audio\n" +
-         "ffmpegBin = \"" + v("projectDir") + "\\tools\\ffmpeg\\bin\"\n" +
+         "ffmpegBin = \"" + vbsEscape(v("projectDir")) + "\\tools\\ffmpeg\\bin\"\n" +
          "Set env = ws.Environment(\"PROCESS\")\n" +
          "env(\"PATH\") = ffmpegBin & \";\" & env(\"PATH\")\n\n";
 }
@@ -373,11 +377,12 @@ function buildProvision() {
     "cd /d \"" + v("projectDir") + "\\tools\\stadiacast\"\n" +
     "echo ============================================\n" +
     "echo  Pair the controller to WiFi over Bluetooth\n" +
-    "echo  SSID: " + v("ssid") + "\n" +
+    "echo  SSID: " + batEcho(v("ssid")) + "\n" +
     "echo ============================================\n" +
     "echo.\n" +
     "echo Step 1: put the controller in pairing mode (orange LED blinking).\n" +
     "echo Step 2: run the scan command below, copy the Bluetooth address.\n" +
+"echo   The tool will ask for your WiFi password - type it there only, never share it.\n" +
     "echo   (This BLE address is ONLY for pairing. It is NOT the WiFi MAC.)\n" +
     "echo.\n" +
     "stadiacast-provision.exe scan\n" +
@@ -385,7 +390,7 @@ function buildProvision() {
     "set \"ADDR=\"\n" +
     "set /p \"ADDR=Paste the Bluetooth address from scan: \"\n" +
     "if \"%ADDR%\"==\"\" (echo No address entered. Exiting. & pause & exit /b 1)\n" +
-"stadiacast-provision.exe provision --address \"%ADDR%\" --ssid \"" + v("ssid") + "\"\n" +
+"stadiacast-provision.exe provision --address \"%ADDR%\" --ssid \"" + batPct(v("ssid")) + "\"\n" +
     "echo.\n" +
     "echo Now wake the controller so it joins WiFi.\n" +
     "echo THEN run find-controller-mac.bat on this PC - it detects the\n" +
@@ -502,7 +507,7 @@ function buildSummary() {
           "Controller IP      : " + ctrlIp() + (detected() ? " (detected)" : " (DEFAULT - not detected yet)") + "\n" +
           "Controller MAC     : " + ctrlMac() + (detected() ? " (detected)" : " (PLACEHOLDER - detect before installing DNS rule)") + "\n" +
           "WiFi SSID          : " + v("ssid") + "\n" +
-          "WiFi password      : " + (v("wifiPass") ? "(filled in generated scripts where needed)" : "(not provided)") + "\n" +
+          "WiFi password      : (not collected by this page - typed only into the provision tool prompt)\n" +
           "Project folder     : " + v("projectDir") + "\n" +
           "Python             : " + v("pythonExe") + "\n" +
           "Log folder         : " + logDir() + "\n" +
@@ -531,13 +536,13 @@ function buildSummary() {
 function buildChecklist() {
   const items = [
     "Identify firmware: <code>docs/01-know-your-firmware.md</code>",
-    $("optAudio").checked ? "Install ffmpeg with libopus into <code>" + v("projectDir") + "\\tools\\ffmpeg\\bin</code>" : null,
+    $("optAudio").checked ? "Install ffmpeg with libopus into <code>" + htmlEscape(v("projectDir")) + "\\tools\\ffmpeg\\bin</code>" : null,
     "169429 owner? Back up first: <code>backup-169429.bat</code>",
     "169429 owner? Flash 316382: <code>start-flasher.bat</code>",
-    "Pair controller to WiFi <code>" + v("ssid") + "</code>: <code>provision-wifi.bat</code> (no MAC needed yet)",
+    "Pair controller to WiFi <code>" + htmlEscape(v("ssid")) + "</code>: <code>provision-wifi.bat</code> (no MAC needed yet)",
     "Run <code>find-controller-mac.bat</code> on this PC - detects real WiFi MAC + IP (not Bluetooth) and writes <code>detected-values.txt</code>",
     "Load <code>detected-values.txt</code> in this page (or let your AI apply the values), then regenerate - you never type the MAC or IP",
-    "Install <code>dnsmasq-stadia.conf</code> on router <code>" + v("routerIp") + "</code>",
+    "Install <code>dnsmasq-stadia.conf</code> on router <code>" + htmlEscape(v("routerIp")) + "</code>",
     "Start receiver: <code>start-receiver.vbs</code> (press Stadia button ~1 s)",
     "Enable autostart: copy <code>autostart-receiver.vbs</code> to Startup folder",
     "If it breaks: <code>restart-receiver.vbs</code>, then <code>docs/07-troubleshooting.md</code>"
