@@ -119,6 +119,8 @@
         <div class="hint" style="margin-top:10px;">You do <b>not</b> enter the controller's IP or MAC anywhere. They are detected for you after pairing &mdash; see step 2 below.</div>
         <input type="hidden" id="controllerIp" value="">
         <input type="hidden" id="controllerMac" value="">
+        <input type="hidden" id="controller2Ip" value="">
+        <input type="hidden" id="controller2Mac" value="">
       </fieldset>
 
       <fieldset>
@@ -142,7 +144,11 @@
           <input type="text" id="controllerMacManual" value="" placeholder="d4:f5:47:xx:xx:xx">
           <label for="controllerIpManual">Controller IP (detected)</label>
           <input type="text" id="controllerIpManual" value="" placeholder="192.168.1.155">
-          <button id="applyManualBtn" class="secondary" style="margin-top:10px;">Apply detected values</button>
+                    <label for="controller2MacManual">Controller 2 WiFi MAC (detected, optional)</label>
+          <input type="text" id="controller2MacManual" value="" placeholder="f0:ef:86:xx:xx:xx">
+          <label for="controller2IpManual">Controller 2 IP (detected, optional)</label>
+          <input type="text" id="controller2IpManual" value="" placeholder="192.168.1.156">
+<button id="applyManualBtn" class="secondary" style="margin-top:10px;">Apply detected values</button>
         </details>
       </fieldset>
 
@@ -244,15 +250,21 @@ function htmlEscape(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "
 function ctrlIp() { return v("controllerIp") || "192.168.1.155"; }
 function ctrlMac() { return v("controllerMac") || "aa:bb:cc:dd:ee:ff"; }
 function detected() { return !!(v("controllerIp") && v("controllerMac")); }
+function ctrl2Ip() { return v("controller2Ip") || ""; }
+function ctrl2Mac() { return v("controller2Mac") || ""; }
+function detected2() { return !!(v("controller2Ip") && v("controller2Mac")); }
 
-function applyDetected(mac, ip) {
+function applyDetected(mac, ip, mac2, ip2) {
   if (mac) $("controllerMac").value = mac.trim();
   if (ip) $("controllerIp").value = ip.trim();
+  if (mac2) $("controller2Mac").value = mac2.trim();
+  if (ip2) $("controller2Ip").value = ip2.trim();
   const view = $("detectedView");
   if (detected()) {
     view.innerHTML = '<span style="color:var(--ok);">Detected &amp; applied</span><br>' +
       'MAC&nbsp; : <b style="color:var(--text);">' + htmlEscape(ctrlMac()) + '</b><br>' +
       'IP&nbsp;&nbsp; : <b style="color:var(--text);">' + htmlEscape(ctrlIp()) + '</b><br>' +
+      (detected2() ? 'Controller 2 MAC : <b style="color:var(--text);">' + htmlEscape(ctrl2Mac()) + '</b><br>' + 'Controller 2 IP&nbsp; : <b style="color:var(--text);">' + htmlEscape(ctrl2Ip()) + '</b><br>' : '') +
       '<span style="color:var(--muted);">You can now regenerate to finalize the router rule.</span>';
   }
 }
@@ -261,15 +273,19 @@ function loadDetectedFile(file) {
   const reader = new FileReader();
   reader.onload = function (e) {
     const text = String(e.target.result || "");
-    let mac = "", ip = "";
+    let mac = "", ip = "", mac2 = "", ip2 = "";
     text.split(/\r?\n/).forEach(function (line) {
       const m = line.match(/^\s*(?:CONTROLLER_)?MAC\s*[=:]\s*(\S+)/i);
       const i = line.match(/^\s*(?:CONTROLLER_)?IP\s*[=:]\s*(\S+)/i);
+      const m2 = line.match(/^\s*CONTROLLER2_MAC\s*[=:]\s*(\S+)/i);
+      const i2 = line.match(/^\s*CONTROLLER2_IP\s*[=:]\s*(\S+)/i);
+      if (m2) mac2 = m2[1].replace(/-/g, ":").toLowerCase();
+      if (i2) ip2 = i2[1];
       if (m) mac = m[1].replace(/-/g, ":").toLowerCase();
       if (i) ip = i[1];
     });
-    if (!mac && !ip) { log("No MAC/IP found in that file. Use the file written by find-controller-mac.bat.", true); return; }
-    applyDetected(mac, ip);
+    if (!mac && !ip && !mac2 && !ip2) { log("No MAC/IP found in that file. Use the file written by find-controller-mac.bat.", true); return; }
+    applyDetected(mac, ip, mac2, ip2);
     log("Detected values loaded from " + file.name + ". Regenerate to apply.", false);
   };
   reader.readAsText(file);
@@ -368,6 +384,13 @@ function buildDnsmasq() {
   if ($("optStatic").checked) {
     s += "dhcp-host=" + ctrlMac() + "," + ctrlIp() + "\n";
   }
+  if (detected2()) {
+    s += "dhcp-mac=set:stadia2," + ctrl2Mac() + "\n" +
+         "dhcp-option=tag:stadia2,option:dns-server," + v("pcIp") + "\n";
+    if ($("optStatic").checked) {
+      s += "dhcp-host=" + ctrl2Mac() + "," + ctrl2Ip() + "\n";
+    }
+  }
   s += "\n# Then: dnsmasq --test && restart dnsmasq\n";
   return s;
 }
@@ -417,14 +440,14 @@ function buildFindMac() {
     "echo Pinging " + subnet + ".1-254 to fill the ARP cache (30-60 s)...\n" +
     "for /L %%i in (1,1,254) do ping -n 1 -w 100 " + subnet + ".%%i >nul 2>&1\n" +
     "echo.\n" +
-    "echo ===== Google-OUI devices (MAC starts d4-f5-47) =====\n" +
-    "arp -a | findstr /i \"d4-f5-47\"\n" +
+    "echo ===== Controller candidates (MAC starts d4-f5-47 or f0-ef-86) =====\n" +
+    "arp -a | findstr /i \"d4-f5-47 f0-ef-86\"\n" +
     "echo.\n" +
     "set \"OUTFILE=" + out + "\"\n" +
     "> \"!OUTFILE!\" echo # Stadia WiFi Kit - detected controller values\n" +
     ">>\"!OUTFILE!\" echo # Load this file in configurator.html, or give it to your AI assistant.\n" +
     "set \"FOUND=0\"\n" +
-    "for /f \"tokens=1,2\" %%A in ('arp -a ^| findstr /i \"d4-f5-47\"') do (\n" +
+    "for /f \"tokens=1,2\" %%A in ('arp -a ^| findstr /i \"d4-f5-47 f0-ef-86\"') do (\n" +
     "  set \"DIP=%%A\"\n" +
     "  set \"DMAC=%%B\"\n" +
     "  set \"DMAC=!DMAC:-=:!\"\n" +
@@ -432,13 +455,17 @@ function buildFindMac() {
     "    >>\"!OUTFILE!\" echo CONTROLLER_MAC=!DMAC!\n" +
     "    >>\"!OUTFILE!\" echo CONTROLLER_IP=!DIP!\n" +
     "    set \"FOUND=1\"\n" +
+    "  ) else if \"!FOUND!\"==\"1\" (\n" +
+    "    >>\"!OUTFILE!\" echo CONTROLLER2_MAC=!DMAC!\n" +
+    "    >>\"!OUTFILE!\" echo CONTROLLER2_IP=!DIP!\n" +
+    "    set \"FOUND=2\"\n" +
     "  ) else (\n" +
     "    >>\"!OUTFILE!\" echo # other candidate: !DIP! !DMAC!\n" +
     "  )\n" +
     ")\n" +
     "if \"!FOUND!\"==\"0\" >>\"!OUTFILE!\" echo # NOT DETECTED - controller not on this subnet yet.\n" +
     "echo.\n" +
-    "if \"!FOUND!\"==\"1\" (\n" +
+    "if not \"!FOUND!\"==\"0\" (\n" +
     "  echo Detected! Wrote: !OUTFILE!\n" +
     "  type \"!OUTFILE!\"\n" +
     "  echo.\n" +
@@ -506,7 +533,8 @@ function buildSummary() {
           "Router IP          : " + v("routerIp") + "\n" +
           "Controller IP      : " + ctrlIp() + (detected() ? " (detected)" : " (DEFAULT - not detected yet)") + "\n" +
           "Controller MAC     : " + ctrlMac() + (detected() ? " (detected)" : " (PLACEHOLDER - detect before installing DNS rule)") + "\n" +
-          "WiFi SSID          : " + v("ssid") + "\n" +
+"Controller 2 IP    : " + (detected2() ? ctrl2Ip() + " (detected)" : "(none - single controller)") + "\n" +
+          "Controller 2 MAC   : " + (detected2() ? ctrl2Mac() + " (detected)" : "(none - single controller)") + "\n" +          "WiFi SSID          : " + v("ssid") + "\n" +
           "WiFi password      : (not collected by this page - typed only into the provision tool prompt)\n" +
           "Project folder     : " + v("projectDir") + "\n" +
           "Python             : " + v("pythonExe") + "\n" +
@@ -667,8 +695,9 @@ $("detectedFile").addEventListener("change", function (e) {
 });
 $("applyManualBtn").addEventListener("click", function () {
   const mac = v("controllerMacManual"), ip = v("controllerIpManual");
-  if (!mac && !ip) { log("Enter the detected MAC and/or IP first.", true); return; }
-  applyDetected(mac, ip);
+  const mac2 = v("controller2MacManual"), ip2 = v("controller2IpManual");
+  if (!mac && !ip && !mac2 && !ip2) { log("Enter the detected MAC and/or IP first.", true); return; }
+  applyDetected(mac, ip, mac2, ip2);
   log("Detected values applied. Regenerate to finalize.", false);
 });
 
@@ -694,7 +723,7 @@ $("logMode").addEventListener("change", () => {
 });
 // Persist non-sensitive fields across the two generate passes (pairing, then
 // detection). There is no WiFi password field, so nothing secret is stored.
-var PERSIST = ["pcIp", "routerIp", "ssid", "projectDir", "pythonExe", "logDirCustom", "controllerMacManual", "controllerIpManual"];
+var PERSIST = ["pcIp", "routerIp", "ssid", "projectDir", "pythonExe", "logDirCustom", "controllerMacManual", "controllerIpManual", "controller2MacManual", "controller2IpManual"];
 function saveForm() {
   try {
     var d = {};

@@ -223,3 +223,7 @@ reports.
 Load `detected-values.txt` in `configurator.html` (or have your AI assistant apply the
 values), click **Generate** again, and continue with `04-router-and-dns.md`. Do not install
 the router rule while the summary still says the MAC is a placeholder.
+
+## Two controllers, and the second MAC prefix
+
+Controller Wi-Fi MACs come with at least two different prefixes: d4:f5:47 (Google) and f0:ef:86. find-controller-mac.bat matches both. If two controllers are on the network, it writes the first as CONTROLLER_MAC / CONTROLLER_IP and the second as CONTROLLER2_MAC / CONTROLLER2_IP in detected-values.txt; load that file in configurator.html and both controllers get their own dnsmasq rule. One receiver serves both at the same time (sessions c0 and c1).

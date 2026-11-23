@@ -71,6 +71,19 @@ needs to change.
 
 ---
 
+## Buying a controller today
+
+Two production runs exist, told apart by the box label (model + MFG date) — no need to open the box:
+
+| Box model | Made | Out of the box | Path |
+| --- | --- | --- | --- |
+| GA00303-US | 11/2019 | Factory firmware 169429 | Back up, then flash 316382 (docs/02) |
+| GA00827-US | 4/2025 | Bluetooth-mode firmware | Flash back to Wi-Fi firmware 316382 the same way |
+
+Yes, the 4/2025 run is real: Google kept manufacturing controllers years after the Stadia service shut down in 2023, and sealed units ship with the Bluetooth conversion already applied. Both revisions end up on 316382 and work with this kit. If you have the choice, buy the newer (2025) unit — it has spent far less time in storage, so its 2000 mAh battery is usually in much better shape.
+
+Two controllers at once also work: one receiver serves up to 8 controllers (sessions c0, c1, ...), each as its own virtual Xbox 360 pad — verified with two controllers in It Takes Two and Split Fiction. The configurator generates the per-controller dnsmasq rules for two controllers; never overwrite the first controller's rule when adding the second.
+
 ## Start here
 
 Pick the line that matches you:
@@ -204,6 +217,7 @@ live here.
 | Flashed firmware | 316382 (`GothamYeti_b_img`) - connects successfully |
 | Receiver | stadiacast 1.2.0, `--preset live --gamepad vigem` |
 | Connection | Wi-Fi (native controller protocol), not Bluetooth |
+| Dual controllers | Two at once verified (c0 + c1) — It Takes Two, Split Fiction |
 | Headset | 3.5 mm playback works; microphone unsupported |
 | Wired mode | Still works after flashing |
 | Input latency | p50 about 16 ms; usual bottleneck is video decode/display |

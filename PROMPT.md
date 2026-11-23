@@ -45,7 +45,7 @@ progress by reading the log files (for example backup-progress.log).
 you must yourself read the two backup files' sizes (262144 and 8126464 bytes) and the generated
 backup-169429-SHA256.txt, and state them back to the user. A user saying "it looks done" is NOT
 verification.
-
+11. **Two controllers are supported; never overwrite the first one's config.** One receiver serves up to 8 controllers (c0, c1, ...). Each controller needs its OWN MAC-scoped dnsmasq stanza — when adding a second controller, append its rule, never replace the first controller's. Controller Wi-Fi MACs may start with d4:f5:47 or f0:ef:86; accept both.
 ---
 
 ## The prompt

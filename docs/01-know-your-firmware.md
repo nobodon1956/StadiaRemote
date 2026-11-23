@@ -94,3 +94,6 @@ a receiver. See `08-technical-background.md` for the full analysis.
 
 - Have **169429**? Continue to `02-upgrade-from-169429.md`. Read it fully before touching the controller.
 - Have **316382 / 282115**? Skip to `03-retail-firmware.md`.
+## Note: the 2025 production run (GA00827-US)
+
+Sealed controllers made in 4/2025 (box model GA00827-US) ship with the Bluetooth-mode firmware already applied — they were manufactured years after the Stadia service shut down. This is not a different or incompatible controller: it can be flashed to the 316382 Wi-Fi firmware with the same procedure as a 169429 unit, and from that point everything in this kit applies unchanged. When buying, prefer the 2025 unit if prices are close — less storage time means a healthier battery.
