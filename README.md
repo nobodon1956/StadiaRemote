@@ -16,6 +16,39 @@
 > versions for **Windows, macOS and Linux**. Thanks again to the original author for
 > their work.
 
+---
+
+## What's New in StadiaRemote v1.4.0 (Based on stadiacast 1.4.0)
+
+1. **20 Hz → 125 Hz Polling Rate & 50 ms → 8 ms Latency Upgrade**
+   - Stock `stadiacast` sends `DisplayToController #8` (`StartGame`) when the controller connects, but never sends `DisplayToController #4` (`focus_game`), leaving the firmware in `FOCUS_MENU` (`20 Hz / 50 ms`).
+   - `tools/stadiacast-125hz` patches the launcher at runtime to send `focus_game` once `StartGame` succeeds (`code == 0`), switching the controller firmware to `FOCUS_GAME` (`125 Hz / 8 ms` over the game UDP link), while deduplicating replayed history frames (`t_us`), preserving sparse `GamepadMessage_V2` axes via `HasField()`, and prioritizing 125 Hz game-link input on ViGEm.
+   - Verified at **~125 Hz / ~8 ms** in **ControllerMeta**.
+
+2. **Microphone Support (VB-CABLE + ffmpeg)**
+   - Uses **VB-CABLE** and portable **ffmpeg** (`libopus`) to route the controller microphone to Windows as **`CABLE Output (VB-Audio Virtual Cable)`**.
+   - **Default off on connect**: Starts with `--mic off` (solid white LED).
+   - **Assistant button (0.6 s hold)**: Hold **Assistant** for **0.6 s** to turn the microphone on (slow pulsing white LED); hold **0.6 s** again to turn it off (solid white LED). Short presses (< 0.6 s) are ignored to avoid accidental activation.
+   - **Usage tip**: Set **`CABLE Output (VB-Audio Virtual Cable)`** as the default Windows input (microphone) device, and keep your physical speakers/monitor as the default Windows output device (do **not** set VB-Audio as the default output).
+
+3. **Capture Button Restored (Screenshot & Screen Recording)**
+   - **Short press (< 0.6 s)**: Takes a screenshot (`Win + PrtScn`), saved to `%USERPROFILE%\Pictures\Screenshots`.
+   - **Long press (≥ 0.6 s)**: Toggles screen recording (`Win + Alt + R`), saved to `%USERPROFILE%\Videos\Captures`.
+   - **Usage tip**: Xbox Game Bar recording only works when a game or application window is focused (Windows blocks recording on the bare desktop).
+
+4. **Multi-Controller & Automatic IP / Gateway Detection**
+   - Refactored the launch scripts to remove hardcoded single-controller `--controller-ip` and static network addresses. Multiple controllers (`c0`, `c1`, ...) connect automatically via `--gamepad vigem`, and the scripts auto-detect the local LAN IP (`--advertise-ip`) and default gateway (`--dns-upstream`) via WMI.
+
+5. **Silent Bilingual One-Click Scripts & Autostart**
+   - Rebuilt the scripts in `scripts/` with **bilingual (English / Chinese) filenames, comments, and status dialogs**, running `stadiacast.exe` silently in the background with no console window.
+   - **Desktop shortcut**: Places the one-click **Restart** shortcut on the Desktop; **Start** and **Stop** shortcuts live inside `scripts/`.
+   - **Logon autostart**: Registers Windows logon autostart with `/silent` (no startup popup dialog).
+
+### Acknowledgements
+
+- Thanks to **jkfran** for the [stadiacast](https://github.com/jkfran/stadiacast) project updates.
+- Thanks to **Bilibili 无需多言1221** for the support.
+
 
 ## Why this controller?
 
@@ -156,6 +189,7 @@ the values), then click **Generate** again. Full walkthrough: `docs/10`.
 Click **Generate everything**. It produces, offline:
 
 - `start-receiver.vbs`
+- `stop-receiver.vbs`
 - `restart-receiver.vbs`
 - `autostart-receiver.vbs`
 - `dnsmasq-stadia.conf`
@@ -215,12 +249,13 @@ live here.
 |---|---|
 | Factory firmware | 169429 (`GothamFsi_b_img`) - hangs in setup, cannot connect |
 | Flashed firmware | 316382 (`GothamYeti_b_img`) - connects successfully |
-| Receiver | stadiacast 1.2.0, `--preset live --gamepad vigem` |
+| Receiver | stadiacast 1.4.0 + `tools/stadiacast-125hz` patch (`--preset live --gamepad vigem --mic off`) |
 | Connection | Wi-Fi (native controller protocol), not Bluetooth |
-| Dual controllers | Two at once verified (c0 + c1) — It Takes Two, Split Fiction |
-| Headset | 3.5 mm playback works; microphone unsupported |
-| Wired mode | Still works after flashing |
-| Input latency | p50 about 16 ms; usual bottleneck is video decode/display |
+| Polling rate & latency | **125 Hz / 8.0 ms** over Wi-Fi with `focus_game` patch (unpatched defaults to 20 Hz / 50 ms) |
+| Dual controllers | Two at once verified (`c0` + `c1`) with automatic IP/gateway detection |
+| Extra buttons | Capture: short press screenshot / 0.6 s hold record; Assistant: 0.6 s hold mic toggle |
+| Microphone & headset | Mic supported via VB-CABLE (`CABLE Output`) + ffmpeg; 3.5 mm playback works when system output is not VB-Audio |
+| Wired mode | 125 Hz / 8.0 ms over USB after flashing (stop receiver first before switching to wired) |
 
 ---
 
@@ -230,6 +265,8 @@ live here.
 - **stadiatool** - GaryOderNichts, MIT.
 - **0x-dogfood flasher** - community WebHID tool.
 - **ffmpeg** - ffmpeg.org, LGPL/GPL depending on build.
+- **VB-CABLE** - VB-Audio Software, Donationware (used for controller microphone routing).
+- Special thanks to **jkfran** for the `stadiacast` updates and **Bilibili 无需多言1221** for the support.
 
 See `NOTICE.md` for details. This kit's own files are MIT licensed (`LICENSE`).
 

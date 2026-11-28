@@ -15,11 +15,13 @@ your own, the steps below are written for you too.
 The assistant should guide you through these one at a time, in order. After each download,
 verify it before moving on. Never skip verification of the firmware.
 
-### 1. stadiacast 1.2.0 (the receiver)
+### 1. stadiacast 1.4.0 (the receiver)
 
 - Official source: `https://github.com/jkfran/stadiacast/releases`
-- File: the `stadiacast-1.2.0-windows-x86_64` folder (or matching release asset).
+- File: the `stadiacast-1.4.0-windows-x86_64` folder (or matching release asset).
 - Extract it, then copy the folder into `<project>\stadiacast\`.
+- Run `tools\stadiacast-125hz\patch-stadiacast.bat` once (no Python required) to enable
+  **125 Hz (8 ms)** Wi-Fi mode, Capture/Assistant buttons, and back up `stadiacast.exe.orig`.
 - It contains `stadiacast.exe`, `stadiacast-provision.exe`, and the ViGEmBus driver
   installer under `drivers\`.
 - This project is **Forked from stadiacast** by jkfran, MIT licensed.
@@ -151,7 +153,8 @@ need a connection are the one-time tool downloads above. If you expect to be off
 later, download these files while you still can and keep them together in the project
 folder:
 
-- [ ] stadiacast 1.2.0 folder (includes the receiver and ViGEmBus driver)
+- [ ] stadiacast 1.4.0 folder (includes the receiver and ViGEmBus driver)
+- [ ] VB-CABLE Driver Pack 46 (for controller microphone routing)
 - [ ] stadiatool + Python + `pyusb` + `libusb-package`
 - [ ] flasher page (`tools/flasher`, already in this kit)
 - [ ] 316382 firmware (obtained from a community source + verified against the hashes above)

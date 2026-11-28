@@ -12,6 +12,7 @@ See `../docs/08-tools-and-offline.md` for download links and checksums.
 tools/
 ├── README.md              <- this file
 ├── stadiacast/            <- stadiacast-provision.exe (+ the receiver lives in ../stadiacast/)
+├── stadiacast-125hz/      <- zero-dependency 125 Hz (8 ms) patch for stadiacast.exe 1.2.0
 ├── stadiatool/
 │   └── stadiatool/
 │       ├── stadiatool.py  <- patched read path
@@ -33,6 +34,13 @@ tools/
 - https://github.com/jkfran/stadiacast
 - MIT, jkfran and contributors.
 - This project is Forked from stadiacast. Without it none of this exists.
+
+## stadiacast-125hz
+
+- Zero-dependency patcher (`patch-stadiacast.bat` / `patch-stadiacast.ps1`) + auditable
+  source (`launcher_125hz.py`) for `stadiacast.exe` 1.2.0.
+- Sends `DisplayToController #4` (`focus_game`) after `StartGame`, deduplicates history
+  replays, and preserves sparse axes, raising Wi-Fi polling from 20 Hz to **125 Hz (8 ms)**.
 
 ## stadiatool
 

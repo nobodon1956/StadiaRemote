@@ -9,7 +9,7 @@ to their respective authors.
 - Repository: https://github.com/jkfran/stadiacast
 - Authors: Francisco Jimenez Cabrera and the Stadiacast contributors
 - License: MIT License
-- Version used: 1.2.0 Windows x86_64
+- Version used: 1.4.0 Windows x86_64
 - Copyright (c) 2026 Francisco Jimenez Cabrera and the Stadiacast contributors
 - Role: LAN-side receiver that impersonates the retired Stadia cloud, turns controller
   input into a virtual Xbox 360 gamepad, and streams audio to the headset jack.
@@ -43,12 +43,20 @@ to their respective authors.
 - Modification in this kit: added the `Revert to Wi-Fi mode (Dogfood only)` button and
   fixed the argument-count bug that made it unclickable.
 
-## ffmpeg (optional, headset audio)
+## ffmpeg (headset audio & microphone decoding)
 
 - Repository: https://ffmpeg.org/
 - License: LGPL or GPL depending on build
-- Build used: gyan.dev essentials, libopus enabled
-- Role: Opus encoder for `--audio-source system`.
+- Build used: gyan.dev essentials (v9.1), libopus enabled
+- Role: Opus codec for controller microphone decoding (`--mic-device`) and headset audio (`--audio-source system`).
+
+## VB-CABLE Virtual Audio Device (controller microphone routing)
+
+- Website: https://vb-audio.com/Cable/
+- Author: VB-Audio Software (Vincent Burel)
+- License: Donationware (freeware for personal use; redistributed AS-IS without modification)
+- Version used: VB-CABLE Driver Pack 46
+- Role: Virtual audio loopback cable enabling `CABLE Output (VB-Audio Virtual Cable)` as a Windows microphone input for the Stadia controller.
 
 ## Google firmware image
 

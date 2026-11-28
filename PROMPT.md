@@ -78,7 +78,7 @@ Then set up the tools BEFORE touching hardware:
     doc names. After EACH download, give me the checksum command and have me paste the
     output; confirm it matches before we continue.
   * Only these apply to my case - skip the rest:
-      - Always: stadiacast 1.2.0 (receiver + ViGEmBus driver) and Chrome with WebHID.
+      - Always: stadiacast 1.2.0 (receiver + ViGEmBus driver) and Chrome with WebHID. After extracting stadiacast 1.2.0, run tools/stadiacast-125hz/patch-stadiacast.bat once so Wi-Fi runs at 125 Hz (8 ms) instead of 20 Hz (50 ms).
       - Only for 169429: Python 3.11+ with pyusb + libusb-package, stadiatool (and copy
         the patched stadiatool.py / stadia_hid.py from this kit into it), and the flasher.
       - Only if I want headset audio: ffmpeg with libopus.

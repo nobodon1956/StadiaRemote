@@ -2,11 +2,25 @@
 
 ---
 
-## Headset audio (Wi-Fi mode)
+## Controller microphone & headset audio (Wi-Fi mode)
 
-The receiver can send the PC's sound to a 3.5 mm headset plugged into the controller.
-It is **one-way only**: PC audio goes to the headset. The controller microphone is
-not supported by stadiacast at all, in either Wi-Fi or USB mode.
+`stadiacast 1.4.0` supports both **controller microphone input** (`--mic`, `--mic-device`) and **3.5 mm headset audio output** (`--audio-source system`).
+
+### Microphone setup (VB-CABLE + ffmpeg)
+
+1. Install **VB-CABLE Virtual Audio Device** (`drivers\VBCABLE\VBCABLE_Setup_x64.exe`).
+2. Put **ffmpeg** (essentials build with `libopus`, e.g. 9.1) in `<project>\tools\ffmpeg\bin` and next to `stadiacast.exe`.
+3. In Windows Sound settings, keep your physical speakers/monitor as the **default output** (do **not** leave VB-Audio as default output) and set **`CABLE Output (VB-Audio Virtual Cable)`** as the **default input (microphone)**.
+4. Pass `--mic off --mic-device "<VB-Audio speaker endpoint>"` (already configured in `scripts/start-stadiaremote-启动.vbs`).
+5. On the controller: starts muted (solid white LED). Hold **Assistant** for **0.6 s** to toggle the microphone on (slow pulsing white LED) or off again.
+
+### Extra buttons on Windows (Capture & Assistant)
+
+- **Capture** short press (< 0.6 s): screenshot (`Win + PrtScn`) → `%USERPROFILE%\Pictures\Screenshots`
+- **Capture** long press (≥ 0.6 s): toggle Xbox Game Bar screen recording (`Win + Alt + R`) → `%USERPROFILE%\Videos\Captures` (requires a focused game or app window)
+- **Assistant** long press (≥ 0.6 s): toggles the controller microphone (or triggers `Win + H` voice typing when no mic device is enabled)
+
+### Headset audio (optional)
 
 ### Enable it
 
@@ -96,9 +110,9 @@ Keep the controller charged before a long session.
 
 ## Latency notes
 
-Input is delivered synchronously in the WebRTC data channel; there is no extra queue.
-Measured median input latency in this setup was about 16 ms, with PC-to-gateway around
-0-1 ms and PC-to-controller around 6 ms average (peak ~82 ms).
+With the included `tools/stadiacast-125hz` patch (`focus_game` + `InputDecoder` dedup/sparse-axis
+fixes), the controller runs in native game mode over Wi-Fi at **125 Hz (8.0 ms interval)** —
+matching USB wired mode (compared to **20 Hz / 50 ms** on unpatched `stadiacast 1.2.0`).
 
 In practice, the limiting factor for streaming feel is usually the **video decode and
 display path** on the client device, not the controller. A low-powered old tablet or
